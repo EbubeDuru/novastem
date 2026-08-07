@@ -44,7 +44,7 @@ export function AuthGate() {
           Sign in to build your profile
         </h1>
         <p className="mt-2 text-sm text-slate-400">
-          We'll email you a link — no password needed.
+          We&apos;ll email you a link — no password needed.
         </p>
 
         {status === "sent" ? (

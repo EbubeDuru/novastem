@@ -91,7 +91,7 @@ export function OpportunityPreferencesForm({
           Where would you like to discover opportunities?
         </h3>
         <p className="mt-1 text-sm text-slate-400">
-          We'll personalize your recommendations based on your selection. You can change this anytime in Settings.
+          We&apos;ll personalize your recommendations based on your selection. You can change this anytime in Settings.
         </p>
       </div>
 
@@ -152,7 +152,7 @@ export function OpportunityPreferencesForm({
               );
             })}
             {filteredCountries.length === 0 && (
-              <p className="px-3 py-2 text-sm text-slate-500">No countries match "{search}".</p>
+              <p className="px-3 py-2 text-sm text-slate-500">No countries match &quot;{search}&quot;.</p>
             )}
           </div>
 

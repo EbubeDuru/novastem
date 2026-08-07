@@ -1,6 +1,20 @@
-import type { EligibilityRules } from "@/types/database";
-
 export type EligibilityVerdict = "eligible" | "almost_eligible" | "not_eligible";
+
+/**
+ * Application-level shape stored in opportunities.eligibility_rules.
+ * The database column is JSONB, so this intentionally lives outside the
+ * generated database types and is validated before it is used.
+ */
+export interface EligibilityRules {
+  min_grade?: string;
+  max_grade?: string;
+  min_age?: number;
+  max_age?: number;
+  citizenship?: StudentEligibilityContext["citizenshipStatus"][];
+  countries?: number[];
+  gpa_min?: number;
+  requires_financial_need?: boolean;
+}
 
 export interface EligibilityCheck {
   verdict: EligibilityVerdict;

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import type { TablesInsert } from "@/types/database";
 import { TagInput } from "./tag-input";
 import { SchoolPicker, type SchoolOption } from "./school-picker";
 import { SkillsPicker, type SelectedSkill } from "./skills-picker";
@@ -107,16 +108,31 @@ export function ProfileForm({
     existingPreferences ?? DEFAULT_PREFERENCES
   );
 
-  async function handleCountryChange(id: number | null) {
-    setCountryId(id);
-    setProvinceId(null);
-    if (!id) {
+  useEffect(() => {
+    if (!countryId) {
       setProvinces([]);
       return;
     }
+
+    let cancelled = false;
     const supabase = createClient();
-    const { data } = await supabase.from("provinces").select("id, name").eq("country_id", id).order("name");
-    setProvinces(data ?? []);
+    void supabase
+      .from("provinces")
+      .select("id, name")
+      .eq("country_id", countryId)
+      .order("name")
+      .then(({ data }) => {
+        if (!cancelled) setProvinces(data ?? []);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [countryId]);
+
+  function handleCountryChange(id: number | null) {
+    setCountryId(id);
+    setProvinceId(null);
   }
 
   const canProceed = (() => {
@@ -129,23 +145,25 @@ export function ProfileForm({
     setErrorMsg("");
     const supabase = createClient();
 
-    const { error: profileError } = await supabase.from("student_profiles").upsert(
-      {
-        user_id: userId,
-        school_id: school?.id ?? null,
-        country_id: countryId,
-        province_id: provinceId,
-        grade,
-        date_of_birth: dob || null,
-        citizenship_status: citizenshipStatus || null,
-        residency_country_id: residencyCountryId ?? countryId,
-        career_goals: careerGoals,
-        interests,
-        languages,
-        bio: bio || null,
-      },
-      { onConflict: "user_id" }
-    );
+    const { error: profileError } = await supabase
+  .from("student_profiles")
+  .upsert(
+    {
+      user_id: userId,
+      school_id: school?.id ?? null,
+      country_id: countryId,
+      province_id: provinceId,
+      grade,
+      date_of_birth: dob || null,
+      citizenship_status: citizenshipStatus || null,
+      residency_country_id: residencyCountryId ?? countryId,
+      career_goals: careerGoals,
+      interests,
+      languages,
+      bio: bio || null,
+    } as TablesInsert<"student_profiles">,
+    { onConflict: "user_id" }
+  );
 
     if (profileError) {
       setSaveState("error");
@@ -284,7 +302,7 @@ export function ProfileForm({
         {step === 1 && (
           <div className="flex flex-col gap-5">
             <p className="text-sm text-slate-400">
-              This determines which opportunities you're eligible for — many scholarships and
+              This determines which opportunities you&apos;re eligible for — many scholarships and
               programs restrict by citizenship, residency, or age. We never share this publicly.
             </p>
             <div>

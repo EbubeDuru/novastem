@@ -1,12 +1,23 @@
 import { OpportunityCard, type OpportunityCardData } from "@/components/opportunity-card";
-import type { Opportunity } from "@/types/database";
+import type { Tables } from "@/types/database";
 import type { EligibilityCheck } from "@/lib/eligibility";
+import { headers } from "next/headers";
 
-async function getOpportunities(): Promise<Array<Opportunity & { eligibility: EligibilityCheck | null }>> {
-  // Server Component fetch — hits our own route handler, which applies RLS +
-  // eligibility annotation for the signed-in user server-side.
-  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/opportunities`, {
-    next: { revalidate: 60 }, // ISR: opportunity list doesn't need to be real-time
+async function getOpportunities(): Promise<Array<Tables<"opportunities"> & { eligibility: EligibilityCheck }>> {
+  const requestHeaders = await headers();
+  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+  const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? (host ? `${protocol}://${host}` : null);
+
+  if (!appUrl) return [];
+
+  // Forward the session cookie so the route can calculate eligibility and
+  // apply the signed-in student's opportunity preferences. This response is
+  // user-specific, so it must never be shared through ISR.
+  const cookie = requestHeaders.get("cookie");
+  const res = await fetch(new URL("/api/opportunities", appUrl), {
+    headers: cookie ? { cookie } : undefined,
+    cache: "no-store",
   });
   if (!res.ok) return [];
   const { data } = await res.json();

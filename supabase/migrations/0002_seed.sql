@@ -12,7 +12,7 @@ insert into countries (iso_code, name) values
   ('EG', 'Egypt'), ('ID', 'Indonesia'), ('VN', 'Vietnam'), ('BD', 'Bangladesh'),
   ('JP', 'Japan'), ('KR', 'South Korea'), ('ES', 'Spain'), ('IT', 'Italy'),
   ('NL', 'Netherlands'), ('SG', 'Singapore'), ('AE', 'United Arab Emirates'),
-  ('NZ', 'New Zealand'), ('IE', 'Ireland'), ('GH', 'Ghana'), ('OTH', 'Other')
+  ('NZ', 'New Zealand'), ('IE', 'Ireland'), ('GH', 'Ghana'), ('OT', 'Other')
 on conflict (iso_code) do nothing;
 
 -- US states

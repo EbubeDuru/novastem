@@ -4,8 +4,13 @@ import { run } from "@/agents/discovery-agent";
 // Configure in vercel.json:
 // { "crons": [{ "path": "/api/cron/discover", "schedule": "0 6 * * 1" }] }  // weekly, Monday 6am UTC
 export async function GET(req: NextRequest) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    return NextResponse.json({ error: "Cron is not configured" }, { status: 503 });
+  }
+
   const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

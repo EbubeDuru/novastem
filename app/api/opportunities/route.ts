@@ -1,18 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { evaluateEligibility } from "@/lib/eligibility";
+import { evaluateEligibility, type EligibilityRules } from "@/lib/eligibility";
 import { z } from "zod";
+
+const OPPORTUNITY_TYPES = [
+  "scholarship", "internship", "research", "competition", "fellowship",
+  "event", "volunteer", "certification", "mentorship",
+] as const;
+
+const FUNDING_TYPES = ["paid", "unpaid", "stipend", "scholarship_award", "reimbursed"] as const;
+
+const DIFFICULTIES = ["beginner", "intermediate", "advanced", "competitive"] as const;
 
 const QuerySchema = z.object({
   q: z.string().optional(),
-  type: z.string().optional(),
+  type: z.enum(OPPORTUNITY_TYPES).optional(),
   country_id: z.coerce.number().optional(),
-  is_remote: z.coerce.boolean().optional(),
-  funding_type: z.string().optional(),
-  difficulty: z.string().optional(),
+  is_remote: z.enum(["true", "false"]).transform((value) => value === "true").optional(),
+  funding_type: z.enum(FUNDING_TYPES).optional(),
+  difficulty: z.enum(DIFFICULTIES).optional(),
   page: z.coerce.number().min(1).default(1),
   pageSize: z.coerce.number().min(1).max(50).default(24),
 });
+
+const EligibilityRulesSchema = z.object({
+  min_grade: z.string().optional(),
+  max_grade: z.string().optional(),
+  min_age: z.number().optional(),
+  max_age: z.number().optional(),
+  citizenship: z.array(z.enum(["citizen", "permanent_resident", "visa_holder", "international"])).optional(),
+  countries: z.array(z.number()).optional(),
+  gpa_min: z.number().optional(),
+  requires_financial_need: z.boolean().optional(),
+});
+
+function parseEligibilityRules(value: unknown): EligibilityRules {
+  return EligibilityRulesSchema.parse(value);
+}
 
 export async function GET(req: NextRequest) {
   const parsed = QuerySchema.safeParse(Object.fromEntries(req.nextUrl.searchParams));
@@ -46,7 +70,7 @@ export async function GET(req: NextRequest) {
   // (Unchanged from before — eligibility still comes solely from
   // student_profiles, never from Opportunity Preferences below.)
   const { data: { user } } = await supabase.auth.getUser();
-  let studentContext = null;
+  let studentContext: any = null;
   if (user) {
     const { data: profile } = await supabase
       .from("student_profiles")
@@ -59,7 +83,7 @@ export async function GET(req: NextRequest) {
   const annotated = (opportunities ?? []).map((opp) => ({
     ...opp,
     eligibility: studentContext
-      ? evaluateEligibility(opp.eligibility_rules, {
+      ? evaluateEligibility(parseEligibilityRules(opp.eligibility_rules), {
           grade: studentContext.grade ?? undefined,
           citizenshipStatus: studentContext.citizenship_status ?? undefined,
           countryId: studentContext.country_id ?? undefined,
@@ -77,17 +101,17 @@ export async function GET(req: NextRequest) {
   // ---------------------------------------------------------------------
   let prioritized = annotated;
   if (user && country_id === undefined) {
-    const { data: prefRow } = await supabase
-      .from("opportunity_preferences")
-      .select("mode")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    const { data: prefRow }: { data: any } = await supabase
+  .from("opportunity_preferences")
+  .select("mode")
+  .eq("user_id", user.id)
+  .maybeSingle();
 
     if (prefRow && prefRow.mode !== "anywhere") {
-      const { data: prefCountries } = await supabase
-        .from("opportunity_preference_countries")
-        .select("country_id")
-        .eq("user_id", user.id);
+      const { data: prefCountries }: { data: any[] | null } = await supabase
+  .from("opportunity_preference_countries")
+  .select("country_id")
+  .eq("user_id", user.id);
       const preferredIds = new Set((prefCountries ?? []).map((r) => r.country_id));
 
       if (preferredIds.size > 0) {

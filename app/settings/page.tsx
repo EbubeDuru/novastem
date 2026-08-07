@@ -13,16 +13,16 @@ export default async function SettingsPage() {
 
   const { data: countries } = await supabase.from("countries").select("id, name").order("name");
 
-  const { data: prefRow } = await supabase
-    .from("opportunity_preferences")
-    .select("mode")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const { data: prefRow }: { data: any } = await supabase
+  .from("opportunity_preferences")
+  .select("mode")
+  .eq("user_id", user.id)
+  .maybeSingle();
 
-  const { data: prefCountryRows } = await supabase
-    .from("opportunity_preference_countries")
-    .select("country_id")
-    .eq("user_id", user.id);
+  const { data: prefCountryRows }: { data: any[] | null } = await supabase
+  .from("opportunity_preference_countries")
+  .select("country_id")
+  .eq("user_id", user.id);
 
   const initialValue: OpportunityPreferencesValue = {
     mode: prefRow?.mode ?? "anywhere",
@@ -37,7 +37,7 @@ export default async function SettingsPage() {
           Opportunity Preferences
         </h1>
         <p className="mt-2 text-slate-400">
-          Change where you'd like recommendations drawn from. This never affects your citizenship,
+          Change where you&apos;d like recommendations drawn from. This never affects your citizenship,
           residency, or other eligibility details in your profile.
         </p>
       </header>

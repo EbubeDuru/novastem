@@ -13,29 +13,29 @@ export default async function ProfilePage() {
 
   const { data: countries } = await supabase.from("countries").select("id, name").order("name");
 
-  const { data: profileRow } = await supabase
-    .from("student_profiles")
-    .select("*, schools(name)")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const { data: profileRow }: { data: any } = await supabase
+  .from("student_profiles")
+  .select("*, schools(name)")
+  .eq("user_id", user.id)
+  .maybeSingle();
 
-  const { data: skillRows } = await supabase
-    .from("student_skills")
-    .select("skill_id, proficiency, skills(name)")
-    .eq("user_id", user.id);
+  const { data: skillRows }: { data: any[] | null } = await supabase
+  .from("student_skills")
+  .select("skill_id, proficiency, skills(name)")
+  .eq("user_id", user.id);
 
   // Opportunity Preferences — fetched from its own table. Deliberately
   // separate from the profile/skills queries above.
-  const { data: prefRow } = await supabase
-    .from("opportunity_preferences")
-    .select("mode")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const { data: prefRow }: { data: any } = await supabase
+  .from("opportunity_preferences")
+  .select("mode")
+  .eq("user_id", user.id)
+  .maybeSingle();
 
-  const { data: prefCountryRows } = await supabase
-    .from("opportunity_preference_countries")
-    .select("country_id")
-    .eq("user_id", user.id);
+  const { data: prefCountryRows }: { data: any[] | null } = await supabase
+  .from("opportunity_preference_countries")
+  .select("country_id")
+  .eq("user_id", user.id);
 
   const existingPreferences: OpportunityPreferencesValue | undefined = prefRow
     ? {

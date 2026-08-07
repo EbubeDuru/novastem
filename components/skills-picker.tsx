@@ -100,7 +100,7 @@ export function SkillsPicker({
                 className="flex w-full items-center gap-2 border-t border-white/10 px-4 py-2.5 text-left text-sm text-nova-400 hover:bg-white/5"
               >
                 <Plus className="h-3.5 w-3.5" />
-                Add "{query.trim()}"
+                Add &quot;{query.trim()}&quot;
               </button>
             )}
           </div>
